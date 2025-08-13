@@ -1,28 +1,23 @@
-import { Text } from 'src/ui/text';
-
+import { Text } from '../text';
 import styles from './Button.module.scss';
-import { clsx } from 'clsx';
 
 export const Button = ({
 	title,
 	onClick,
-	htmlType,
 	type,
 }: {
 	title: string;
 	onClick?: () => void;
-	htmlType?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
-	type: 'apply' | 'clear';
+	type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
 }) => {
+	// Определяем модификатор по типу кнопки
+	const buttonClass =
+		type === 'submit'
+			? `${styles.button} ${styles.button_apply}`
+			: `${styles.button} ${styles.button_clear}`;
+
 	return (
-		<button
-			className={clsx(
-				styles.button,
-				{ [styles.button_apply]: type === 'apply' },
-				{ [styles.button_clear]: type === 'clear' }
-			)}
-			type={htmlType}
-			onClick={onClick}>
+		<button className={buttonClass} type={type} onClick={onClick}>
 			<Text weight={800} uppercase>
 				{title}
 			</Text>
