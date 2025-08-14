@@ -20,37 +20,27 @@ import { Select } from 'src/ui/select';
 import { Text } from 'src/ui/text';
 
 type PropsArticleParamsForm = {
-	onSubmit?: (params: ArticleStateType) => void;
-	onReset?: (params: ArticleStateType) => void;
-	onToggle?: (params: boolean) => void;
-	formOp: boolean;
+	onChange: (params: ArticleStateType) => void;
 };
 
-export const ArticleParamsForm = (props: PropsArticleParamsForm) => {
-	const { onSubmit, onReset, onToggle, formOp } = props;
+export const ArticleParamsForm = ({ onChange }: PropsArticleParamsForm) => {
+	const formRef = useRef<HTMLElement | null>(null);
 
-	const formRef = useRef<HTMLBaseElement | null>(null);
-
-	const [params, setParams] = useState({
-		fontFamilyOption: fontFamilyOptions[0],
-		fontColor: fontColors[0],
-		backgroundColor: backgroundColors[0],
-		contentWidth: contentWidthArr[0],
-		fontSizeOption: fontSizeOptions[0],
-	});
+	const [formOpen, setFormOpen] = useState(false);
+	const [params, setParams] = useState<ArticleStateType>(defaultArticleState);
 
 	useEffect(() => {
-		if (!formOp) return; // чтобы не навешивать лишние обработчики, когда форма закрыта
+		if (!formOpen) return;
 
 		const handleClickOutside = (event: MouseEvent) => {
 			if (formRef.current && !formRef.current.contains(event.target as Node)) {
-				onToggle?.(false);
+				setFormOpen(false);
 			}
 		};
 
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'Escape') {
-				onToggle?.(false);
+				setFormOpen(false);
 			}
 		};
 
@@ -61,65 +51,34 @@ export const ArticleParamsForm = (props: PropsArticleParamsForm) => {
 			document.removeEventListener('mousedown', handleClickOutside);
 			document.removeEventListener('keydown', handleKeyDown);
 		};
-	}, [formOp, onToggle]);
+	}, [formOpen]);
 
-	const toggler = () => {
-		onToggle?.(formOp);
+	const toggleForm = () => {
+		setFormOpen((prev) => !prev);
 	};
 
-	const cbFonts = (option: OptionType) => {
-		setParams({
-			...params,
-			fontFamilyOption: option,
-		});
-	};
-
-	const cbColorsFont = (option: OptionType) => {
-		setParams({
-			...params,
-			fontColor: option,
-		});
-	};
-
-	const cbColorsBackground = (option: OptionType) => {
-		setParams({
-			...params,
-			backgroundColor: option,
-		});
-	};
-
-	const cbContentWidth = (option: OptionType) => {
-		setParams({
-			...params,
-			contentWidth: option,
-		});
-	};
-
-	const cbFontSize = (option: OptionType) => {
-		setParams({
-			...params,
-			fontSizeOption: option,
-		});
+	const updateParam = (key: keyof ArticleStateType, option: OptionType) => {
+		const newParams = { ...params, [key]: option };
+		setParams(newParams);
 	};
 
 	const submitParams = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		onSubmit?.(params);
+		onChange(params);
 	};
 
 	const resetStyles = () => {
 		setParams(defaultArticleState);
-		onReset?.(defaultArticleState);
+		onChange(defaultArticleState);
 	};
 
-	const sidebarStyle = clsx({
-		[styles.container]: true,
-		[styles.container_open]: formOp,
+	const sidebarStyle = clsx(styles.container, {
+		[styles.container_open]: formOpen,
 	});
 
 	return (
 		<>
-			<ArrowButton onClick={toggler} isOpen={formOp} />
+			<ArrowButton onClick={toggleForm} isOpen={formOpen} />
 			<aside ref={formRef} className={sidebarStyle}>
 				<form
 					className={styles.form}
@@ -130,21 +89,21 @@ export const ArticleParamsForm = (props: PropsArticleParamsForm) => {
 							{'Задайте параметры'}
 						</Text>
 						<Select
-							onChange={cbFonts}
+							onChange={(opt) => updateParam('fontFamilyOption', opt)}
 							selected={params.fontFamilyOption}
 							placeholder='Open Sans'
 							title='Шрифт'
 							options={fontFamilyOptions}
 						/>
 						<RadioGroup
-							onChange={cbFontSize}
+							onChange={(opt) => updateParam('fontSizeOption', opt)}
 							selected={params.fontSizeOption}
 							name={params.fontSizeOption.className}
 							title={'Размер шрифта'}
 							options={fontSizeOptions}
 						/>
 						<Select
-							onChange={cbColorsFont}
+							onChange={(opt) => updateParam('fontColor', opt)}
 							selected={params.fontColor}
 							placeholder={params.fontColor.title}
 							title='Цвет шрифта'
@@ -152,14 +111,14 @@ export const ArticleParamsForm = (props: PropsArticleParamsForm) => {
 						/>
 						<Separator />
 						<Select
-							onChange={cbColorsBackground}
+							onChange={(opt) => updateParam('backgroundColor', opt)}
 							selected={params.backgroundColor}
 							placeholder={params.backgroundColor.title}
 							title='Цвет фона'
 							options={backgroundColors}
 						/>
 						<Select
-							onChange={cbContentWidth}
+							onChange={(opt) => updateParam('contentWidth', opt)}
 							selected={params.contentWidth}
 							placeholder={params.contentWidth.title}
 							title='Ширина контента'
